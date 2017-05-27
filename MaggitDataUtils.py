@@ -22,88 +22,87 @@ import base64
 import hashlib
 from Crypto.Cipher import AES
 
-# postavljamo vrijednosti konstanti
+# set up some constants
 ALGO_AES = 2
 ALGO_ROT13 = 1
 ALGO_PLAIN = 0
-# karakter koji se koristi za padding na trazenu duzinu (AES trazi 32byte blokove)
+# character to use for padding (AES needs 32byte blocks)
 PADDING = '{'
 
 class DataMangler:
     '''
-        Klasa koja sadrzi funkcionalnost potrebnu za enkripciju/dekripciju
-        te kodiranje i dekodiranje podataka
+        Handles data encryption / decryption and encoding / decoding
     '''
     def __init__(self, data=''):
         self.raw_data = data
-        # generiramo novi kriptokljuc 128bit (privremeno samo)
+        # generate a temporary 128bit key
         self.cipher = AES.new('thisisa16bytekey')
     
     def obfuscate(self, password='thisisapassword', algo=0):
-        # enkripcija i enkodiranje podataka
+        # encrypting and encoding the data
         if algo == ALGO_AES:
             # AES
-            # iz 128bit passworda generiramo 256bit hash
+            # generate a 256bit hash from the 128bit password
             secret = hashlib.sha256(password).digest()
             self.cipher = AES.new(secret)
-            # dodajemo padding, kriptiramo 256bitnom enkripcijom i enkodiramo podatke
+            # add padding, encrypt with 256bits and encode the data
             obfuscated = self.encode(self.AESencrypt(self.add_padding(self.raw_data)))
         elif algo == ALGO_ROT13:
             # ROT13
-            # enkripcija supstitucijskom sifrom (rotacija abecede za 13 karaktera)
+            # encrypt using the ROT13 supstitution cypher
             obfuscated = self.encode(self.raw_data.encode('rot13'))
         else:
-            # BEZ ENKRIPCIJE
-            # podatke samo enkodiramo
+            # NO ENCRYPTION
+            # data is only encoded
             obfuscated = self.encode(self.raw_data)
         return obfuscated
     
     def deobfuscate(self, password='thisisapassword', algo=0):
-        # dekodiranje i dekripcija podataka
+        # decoding and decrypting the data
         if algo == ALGO_AES:
             # AES
             secret = hashlib.sha256(password).digest()
             self.cipher = AES.new(secret)
-            # dekodiramo, dekriptiramo i skidamo padding
+            # decode, decrypt and remove the padding
             deobfuscated = self.remove_padding(self.AESdecrypt(self.decode(self.raw_data)))
         elif algo == ALGO_ROT13:
             # ROT13
-            # dekriptiramo i dekodiramo podatke
+            # decrypt and decode the data
             deobfuscated = self.decode(self.raw_data).decode('rot13')
         else:
-            # BEZ ENKRIPCIJE
-            # samo dekodiramo podatke
+            # NO ENCRYPTION
+            # just decode the data
             deobfuscated = self.decode(self.raw_data)
         return deobfuscated
     
     def add_padding(self, data):
-        # dodavanje paddinga na podatke (potrebno za AES)
+        # pad the data for AES
         return data + (32 - len(data) % 32) * PADDING
     
     def remove_padding(self, data):
-        # uklanjanje paddinga
+        # padding removal
         return data.rstrip(PADDING)
     
     def encode(self, data):
-        # base64 enkodiranje podataka (64 standardna ASCII znaka, pogodno za mrezni transfer preko svih tekstualnih protokola)
+        # base64 encoding (64 standard ASCII characters, useful for network transfer over all textual protocols)
         return base64.b64encode(data)
     
     def decode(self, data):
-        # base64 dekodiranje podataka
+        # base64 decoding
         return base64.b64decode(data)
     
     def AESencrypt(self, data):
-        # kriptiranje podataka AES sifrom
+        # AES encrypts the data
         return self.cipher.encrypt(data)
     
     def AESdecrypt(self, data):
-        # dekriptiranje podataka AES sifrom
+        # AES decrypts the data
         return self.cipher.decrypt(data)
     
     
 
 if __name__ == '__main__':
-    # ako modul nije includean nego se pozove sam ne radi nista
+    # do nothing if run directly
     pass
     
     

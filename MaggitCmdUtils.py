@@ -18,53 +18,53 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# konstante koje barataju sa ANSI color kodovima za bojanje komandne linije
+# constants dealing with ANSI color codes for the command line
 CC_IN = '\033[92m'
 CC_OUT = '\033[91m'
 CC_NONE = '\033[0m'
 
 class CommandInterface:
     '''
-        Klasa koja pruza kontrolno sucelje nad aplikacijom/tunelom
+        Sets up the control application / tunnel control interface
     '''
     def __init__(self, tunnel):
         self.tunnel = tunnel
         self.needed = True
         while self.needed:
-            # glavna petlja se vrti do naredbe za prekid
-            inp = raw_input("") # ucitavamo red
-            if len(inp) == 0: # ako je red prazan preskacemo akciju
+            # loops until we get a command to stop
+            inp = raw_input("") # read a line
+            if len(inp) == 0: # if the line is empty, skip
                 continue
-            elif inp.startswith('/'): # ako pocinje sa / skacemo na obradu naredbe
+            elif inp.startswith('/'): #  if it starts with '/' we jump to run the command
                 self.run_command(inp[1:])
             else:
-                # stavljamo podatke u red za slanje
+                # put some data in the send queue
                 print CC_OUT + '> '+str(inp)+'' + CC_NONE
                 self.tunnel.send(inp)
 
     def run_command(self, cmd):
-        # izvrsavanje naredbi
+        # executing the commands
         if cmd == 'q' or cmd == 'quit':
-            # naredba za izlaz iz aplikacije
+            # quit application command
             print ': Quitting..'
             self.needed = False
         elif cmd == 'c' or cmd == 'connect':
-            # naredba za ostvarivanja CLIENT-SERVER veze, druga strana postaje SERVER
+            # the command to establish a CLIENT-SERVER connection, the other side becoming the SERVER
             print ': Initializing other side as server..'
             self.tunnel.send_switch_to_server()
         elif cmd.startswith('exec'):
-            # naredba za slanje naredbe koja ce se izvrsiti na drugoj strani tunela i vratiti output
+            # remote command execution, returns the command output
             self.tunnel.send_command(cmd[4:])
         elif cmd == 'i' or cmd == 'info':
-            # naredba koja prikazuje informacije o trenutnim postavkama tunela
+            # get current tunnel settings information
             self.tunnel.display_tunnel_info()
         elif cmd == 'pi' or cmd == 'packetinfo':
-            # naredba koja prikazuje informacije o posljednjem poslanom paketu
+            # show last sent packet info
             self.tunnel.dump_packet_info()
         else:
-            # naredba nije prepoznata
+            # unknown command
             print ': Unknown command!'
 
 if __name__ == '__main__':
-    # ako modul nije includean nego se pozove sam ne radi nista
+    # do nothing if run directly
     pass
